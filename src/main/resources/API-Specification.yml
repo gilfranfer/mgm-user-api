@@ -1,0 +1,232 @@
+openapi: 3.0.0
+info:
+  title: User Service API
+  version: 1.0.0
+  description: API to manage user data
+
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Users
+    description: User Management
+
+paths:
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      description: Retrieve User data for the given ID.
+      operationId: getUserById
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/correlationIdHeaderParam"
+        - $ref: "#/components/parameters/userIdPathParam"
+      responses:
+        '200':
+          $ref: "#/components/responses/200_Ok_user_details"
+        '400':
+          $ref: "#/components/responses/400_Bad_Request_Error"
+        '404':
+          $ref: "#/components/responses/404_Not_Found_Error"
+        '500':
+          $ref: "#/components/responses/500_Internal_Error"
+  /users:
+    get:
+      summary: Get users
+      description: |
+        Retrieve User data by profession or date range.
+        - Optional query parameter `profession` can be used to retrieve only users with the given profession.
+        - Optional query parameter `starDate` and `endDate` can be used to retrieve only users created withing the given date range.
+      operationId: getUsers
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/correlationIdHeaderParam"
+        - $ref: "#/components/parameters/professionQueryParam"
+        - $ref: "#/components/parameters/startDateQueryParam"
+        - $ref: "#/components/parameters/endDateQueryParam"
+      responses:
+        '200':
+          $ref: "#/components/responses/200_Ok_users_list_details"
+        '400':
+          $ref: "#/components/responses/400_Bad_Request_Error"
+        '500':
+          $ref: "#/components/responses/500_Internal_Error"
+    post:
+      summary: Create user
+      description: Create a new user.
+      operationId: postUser
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/correlationIdHeaderParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        '201':
+          $ref: "#/components/responses/201_User_created"
+        '400':
+          $ref: "#/components/responses/400_Bad_Request_Error"
+        '500':
+          $ref: "#/components/responses/500_Internal_Error"
+
+components:
+  schemas:
+    date:
+      type: string
+      format: date
+      description: Date in YYYY-MM-DD format.
+      example: 2025-02-11
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: "#/components/schemas/errorCode"
+        message:
+          $ref: "#/components/schemas/errorMessage"
+    errorCode:
+      type: string
+      example: '404'
+    errorMessage:
+      type: string
+      example: 'Not Found'
+    profession:
+      type: string
+      description: User's profession.
+      example: engineer
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+          format: email
+        profession:
+          type: string
+        dateCreated:
+          type: string
+          format: date
+        city:
+          type: string
+    userId:
+      type: integer
+      format: int64
+      description: User unique identifier.
+      example: 14
+      minimum: 0
+  parameters:
+    correlationIdHeaderParam:
+      in: header
+      required: false
+      name: correlationId
+      description: Unique identifier used to trace and track requests across multiple services or components.
+      schema:
+        type: string
+        format: uuid
+        example: "a3132900-f4c3-4316-abd0-e3e3813619d6"
+    endDateQueryParam:
+      in: query
+      required: false
+      name: endDate
+      description: End Date (inclusive).
+      schema:
+        $ref: "#/components/schemas/date"
+    professionQueryParam:
+      in: query
+      required: false
+      name: profession
+      description: User's profession.
+      schema:
+        $ref: "#/components/schemas/profession"
+    startDateQueryParam:
+      in: query
+      required: false
+      name: startDate
+      description: Start Date (inclusive).
+      schema:
+        $ref: "#/components/schemas/date"
+    userIdPathParam:
+      in: path
+      required: true
+      name: userId
+      description: User's unique identifier.
+      schema:
+        $ref: "#/components/schemas/userId"
+  headers:
+    correlationId:
+      description: Unique identifier used to trace and track requests across multiple services or components.
+      required: false
+      schema:
+        type: string
+        format: uuid
+        example: "a3132900-f4c3-4316-abd0-e3e3813619d6"
+  responses:
+    200_Ok_users_list_details:
+      description: List of user details retrieved.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/User"
+    200_Ok_user_details:
+      description: User details retrieved.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+    201_User_created:
+      description: User created.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+    400_Bad_Request_Error:
+      description: Bad Request.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404_Not_Found_Error:
+      description: Resource not found.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    500_Internal_Error:
+      description: Internal service error.
+      headers:
+        correlationId:
+          $ref: "#/components/headers/correlationId"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
