@@ -2,16 +2,29 @@
 We want you to build a Microservice that exposes a couple endpoints to return user information. 
 We also want a simple UI to display the information.
 
-## Endpoints:
+## Project Milestones and Issues
+In order to track and organize the work, I have created [Milestones](https://github.com/gilfranfer/mgm-user-api/milestones) and [Issues](https://github.com/gilfranfer/mgm-user-api/milestone/1?closed=1) in the GitHub project repository.
+
+## Endpoints
 - Endpoint to return a specific user (and all associated information): GET /users/{id}
 - Endpoint to return a list of users created between a date range: GET /users?startDate={start}&endDate={end}
 - Endpoint to return a list of users based on a specific profession: GET /users?profession={profession}
 - (Custom) Endpoint to create user: POST /users
 
 Find [here](https://github.com/gilfranfer/mgm-user-api/blob/master/src/main/resources/API-Specification.yml) the API Specification file.
+![API Specification](https://github.com/gilfranfer/mgm-user-api/blob/master/src/main/resources/images/BE-APISpecification.png)
 
-## Project Milestones and Issues
-In order to track and organize the work, I have created [Milestones](https://github.com/gilfranfer/mgm-user-api/milestones) and [Issues](https://github.com/gilfranfer/mgm-user-api/milestone/1?closed=1) in the GitHub project repository.
+## UI
+The UI was intended to have its own repository, but I have just included the files here to keep it simple.
+
+#### Main Page to list Users
+[Link to code](https://github.com/gilfranfer/mgm-user-api/blob/master/index.html) 
+![UI User List](https://github.com/gilfranfer/mgm-user-api/blob/master/src/main/resources/images/UI-UsersList.png)
+
+#### User details page
+[Link to code](https://github.com/gilfranfer/mgm-user-api/blob/master/user-details.html)
+![UI User Details](https://github.com/gilfranfer/mgm-user-api/blob/master/src/main/resources/images/UI-UserDetails.png)
+
 
 ## Follow-up Questions
 
