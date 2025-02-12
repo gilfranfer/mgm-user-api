@@ -53,7 +53,7 @@ public class UsersApiController implements UsersApi {
     ) {
         log.info("Executing getUsers");
         if(nonNull(profession)){
-            return ResponseEntity.ok(userService.getUsersByProfession(profession));
+            return ResponseEntity.ok(userService.getUsersByProfession(profession.toLowerCase()));
         }else if(nonNull(startDate) && nonNull(endDate)){
             return ResponseEntity.ok(userService.getUsersByDateRange(startDate, endDate));
         }else if (nonNull(startDate)||nonNull(endDate)) {
