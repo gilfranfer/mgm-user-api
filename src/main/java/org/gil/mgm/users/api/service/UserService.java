@@ -1,5 +1,6 @@
 package org.gil.mgm.users.api.service;
 
+import org.gil.mgm.users.api.entity.UserEntity;
 import org.gil.mgm.users.api.exception.ResourceNotFoundException;
 import org.gil.mgm.users.api.exception.ValidationException;
 import org.gil.mgm.users.api.model.User;
@@ -50,6 +51,12 @@ public class UserService {
                 .stream()
                 .map(user -> MODEL_MAPPER.map(user, User.class))
                 .collect(Collectors.toList());
+    }
+
+    public User createUser(User userModel) {
+        UserEntity userEntity = MODEL_MAPPER.map(userModel, UserEntity.class);
+        userEntity = userRepository.save(userEntity);
+        return MODEL_MAPPER.map(userEntity, User.class);
     }
 
 }

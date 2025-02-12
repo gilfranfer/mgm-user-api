@@ -54,7 +54,6 @@ public class DataLoader {
     }
 
     private UserEntity buildUserEntity(String[] data) {
-        int ID_COLUMN_INDEX = 0;
         int FIRSTNAME_COLUMN_INDEX = 1;
         int LASTNAME_COLUMN_INDEX = 2;
         int EMAIL_COLUMN_INDEX = 3;
@@ -64,7 +63,6 @@ public class DataLoader {
         int CITY_COLUMN_INDEX = 7;
 
         return new UserEntity(
-                Long.parseLong(data[ID_COLUMN_INDEX]),
                 data[FIRSTNAME_COLUMN_INDEX],
                 data[LASTNAME_COLUMN_INDEX],
                 data[EMAIL_COLUMN_INDEX],

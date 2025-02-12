@@ -60,6 +60,19 @@ public interface UsersApi {
     );
 
 
+    @Operation(summary = "Create user", description = "Create a new user.", tags={ "Users" })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal service error.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))) })
+    @RequestMapping(value = "/users",
+            produces = { "application/json" },
+            consumes = { "application/json" },
+            method = RequestMethod.POST)
+    ResponseEntity<User> postUser(
+            @Parameter(in = ParameterIn.DEFAULT, description = "", required=true, schema=@Schema()) @Valid @RequestBody User body,
+            @Parameter(in = ParameterIn.HEADER, description = "Unique identifier used to trace and track requests across multiple services or components." ,schema=@Schema()) @RequestHeader(value="correlationId", required=false) UUID correlationId
+    );
 
 }
 

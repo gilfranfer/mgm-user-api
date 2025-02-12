@@ -1,5 +1,8 @@
 package org.gil.mgm.users.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.gil.mgm.users.api.exception.ResourceNotFoundException;
 import org.gil.mgm.users.api.model.User;
 import org.gil.mgm.users.api.service.UserService;
@@ -15,13 +18,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import static org.gil.mgm.users.api.exception.ErrorCodes.INTERNAL_EXCEPTION_ERROR_CODE;
-import static org.gil.mgm.users.api.exception.ErrorCodes.getFormattedErrorMessage;
+import static org.gil.mgm.users.api.exception.ErrorCodes.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -176,6 +179,101 @@ public class UsersApiControllerTest {
                     .andExpect(status().isBadRequest());
 
             verifyNoInteractions(userService);
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /users")
+    class PostUser {
+
+        private final User createRequest = generator.nextObject(User.class);
+
+        @Test
+        @DisplayName("Should return HTTP 201 Created when user is successfully created")
+        void shouldReturnCreatedWhenUserIsCreated() throws Exception {
+            User createdUser = generator.nextObject(User.class);
+
+            when(userService.createUser(any(User.class))).thenReturn(createdUser);
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                            .content(asJsonString(createRequest))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.id").value(createdUser.getId()))
+                    .andExpect(jsonPath("$.firstname").value(createdUser.getFirstname()))
+                    .andExpect(jsonPath("$.lastname").value(createdUser.getLastname()))
+                    .andExpect(jsonPath("$.email").value(createdUser.getEmail()))
+                    .andExpect(jsonPath("$.profession").value(createdUser.getProfession()))
+                    .andExpect(jsonPath("$.dateCreated").value(createdUser.getDateCreated().toString()))
+                    .andExpect(jsonPath("$.country").value(createdUser.getCountry()))
+                    .andExpect(jsonPath("$.city").value(createdUser.getCity()))
+                    .andReturn();
+
+            verify(userService).createUser(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Should return HTTP 400 Bad Request when request body is missing")
+        void shouldReturnBadRequestWhenRequestBodyIsMissing() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.code").value(REQUIRED_REQUEST_BODY_MISSING))
+                    .andExpect(jsonPath("$.message").value(getFormattedErrorMessage(REQUIRED_REQUEST_BODY_MISSING)));
+
+            verifyNoInteractions(userService);
+        }
+
+        @Test
+        @DisplayName("Should return HTTP 400 Bad Request when request body is invalid")
+        void shouldReturnBadRequestWhenRequestBodyIsInvalid() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(asJsonString(new User()))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.code").value(GENERIC_BAD_REQUEST))
+                    .andExpect(jsonPath("$.message").value(getFormattedErrorMessage(GENERIC_BAD_REQUEST, "Invalid request body")));
+
+            verifyNoInteractions(userService);
+        }
+
+        @Test
+        @DisplayName("Should return HTTP 500 Internal Server Error on service failure")
+        void shouldReturnInternalServerErrorOnException() throws Exception {
+            String exceptionMessage = "Unexpected Error";
+            when(userService.createUser(any(User.class))).thenThrow(new RuntimeException(exceptionMessage));
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                            .content(asJsonString(createRequest))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.code").value(INTERNAL_EXCEPTION_ERROR_CODE))
+                    .andExpect(jsonPath("$.message").value(getFormattedErrorMessage(INTERNAL_EXCEPTION_ERROR_CODE, exceptionMessage)));
+
+            verify(userService).createUser(any(User.class));
+        }
+
+    }
+
+    public static String asJsonString(final Object obj) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            // Register JavaTimeModule to handle Instant and other java.time classes
+            objectMapper.registerModule(new JavaTimeModule());
+            // Disable serialization of dates as timestamps (use ISO-8601 format)
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

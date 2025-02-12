@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -64,7 +63,6 @@ class UserServiceTest {
         }
 
     }
-
 
     @Nested
     @DisplayName("Tests for getAllUsers method")
@@ -132,5 +130,23 @@ class UserServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Tests for createUser method")
+    class CreateUser {
+
+        @Test
+        @DisplayName("Should create user")
+        void shouldCreateUser() {
+            var userModel = easyRandom.nextObject(User.class);
+            var userEntity = easyRandom.nextObject(UserEntity.class);
+
+            when(userRepository.save(any(UserEntity.class)))
+                    .thenReturn(userEntity);
+
+            var user = userService.createUser(userModel);
+            assertEquals(user.getId(), userEntity.getId());
+            verify(userRepository).save(any(UserEntity.class));
+        }
+    }
 
 }

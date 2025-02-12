@@ -1,9 +1,6 @@
 package org.gil.mgm.users.api.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -12,6 +9,7 @@ import java.time.LocalDate;
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String firstname;
     private String lastname;
@@ -22,8 +20,7 @@ public class UserEntity {
     private String country;
     private String city;
 
-    public UserEntity(Long id, String firstname, String lastname, String email, String profession, LocalDate dateCreated, String country, String city) {
-        this.id = id;
+    public UserEntity(String firstname, String lastname, String email, String profession, LocalDate dateCreated, String country, String city) {
         this.firstname = firstname;
         this.lastname = lastname;
         this.email = email;

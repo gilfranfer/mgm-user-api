@@ -12,16 +12,15 @@ import org.gil.mgm.users.api.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2025-02-11T22:44:28.452335707Z[GMT]")
@@ -61,6 +60,25 @@ public class UsersApiController implements UsersApi {
             throw new ValidationException("Both Start Date and End Date must be provided");
         }else{
             return ResponseEntity.ok(userService.getAllUsers());
+        }
+    }
+
+    public ResponseEntity<User> postUser(
+            @Parameter(in = ParameterIn.DEFAULT, description = "", required=true, schema=@Schema()) @Valid @RequestBody User body,
+            @Parameter(in = ParameterIn.HEADER, description = "Unique identifier used to trace and track requests across multiple services or components." ,schema=@Schema()) @RequestHeader(value="correlationId", required=false) UUID correlationId
+    ) {
+        log.info("Executing postUser");
+        validateUserRequestBodyOrThrow(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(body));
+    }
+
+    private void validateUserRequestBodyOrThrow(@Valid User body) {
+        if(isNull(body) || isNull(body.getFirstname()) || isNull(body.getLastname())
+                || isNull(body.getEmail())|| isNull(body.getProfession())
+                || isNull(body.getDateCreated())|| isNull(body.getCity())
+                || isNull(body.getCountry())
+        ) {
+            throw new ValidationException("Invalid request body");
         }
     }
 
