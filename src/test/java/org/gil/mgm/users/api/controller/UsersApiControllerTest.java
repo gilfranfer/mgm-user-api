@@ -15,14 +15,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.gil.mgm.users.api.exception.ErrorCodes.INTERNAL_EXCEPTION_ERROR_CODE;
 import static org.gil.mgm.users.api.exception.ErrorCodes.getFormattedErrorMessage;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,7 +54,7 @@ public class UsersApiControllerTest {
             Long userId = user.getId();
             when(userService.getUserById(userId)).thenReturn(user);
 
-            mockMvc.perform(MockMvcRequestBuilders.get(USERS_ENDPOINT + "/" + userId)
+            mockMvc.perform(get(USERS_ENDPOINT + "/" + userId)
                             .header("correlationId", UUID.randomUUID().toString())
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -78,7 +79,7 @@ public class UsersApiControllerTest {
             Long userId = generator.nextLong();
             when(userService.getUserById(userId)).thenThrow(ResourceNotFoundException.class);
 
-            mockMvc.perform(MockMvcRequestBuilders.get(USERS_ENDPOINT + "/" + userId)
+            mockMvc.perform(get(USERS_ENDPOINT + "/" + userId)
                             .header("correlationId", UUID.randomUUID().toString())
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -94,7 +95,7 @@ public class UsersApiControllerTest {
             Long userId = generator.nextLong();
             when(userService.getUserById(userId)).thenThrow(new RuntimeException(exceptionMessage));
 
-            mockMvc.perform(MockMvcRequestBuilders.get(USERS_ENDPOINT + "/" + userId)
+            mockMvc.perform(get(USERS_ENDPOINT + "/" + userId)
                             .header("correlationId", UUID.randomUUID().toString())
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
@@ -107,4 +108,75 @@ public class UsersApiControllerTest {
             verify(userService).getUserById(userId);
         }
     }
+
+    @Nested
+    @DisplayName("GET " + USERS_ENDPOINT)
+    class GetUsers {
+
+        @Test
+        @DisplayName("Should return all users when no filters are provided")
+        void shouldReturnAllUsers() throws Exception {
+            List<User> users = generator.objects(User.class, 5).toList();
+            when(userService.getAllUsers()).thenReturn(users);
+
+            mockMvc.perform(get(USERS_ENDPOINT)
+                            .header("correlationId", UUID.randomUUID().toString())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(users.size()));
+
+            verify(userService).getAllUsers();
+        }
+
+        @Test
+        @DisplayName("Should return users filtered by profession")
+        void shouldReturnUsersByProfession() throws Exception {
+            String profession = "Software Engineer";
+            List<User> users = generator.objects(User.class, 3).toList();
+            when(userService.getUsersByProfession(profession)).thenReturn(users);
+
+            mockMvc.perform(get(USERS_ENDPOINT)
+                            .header("correlationId", UUID.randomUUID().toString())
+                            .param("profession", profession)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(users.size()));
+
+            verify(userService).getUsersByProfession(profession);
+        }
+
+        @Test
+        @DisplayName("Should return users filtered by date range")
+        void shouldReturnUsersByDateRange() throws Exception {
+            LocalDate startDate = LocalDate.now().minusDays(10);
+            LocalDate endDate = LocalDate.now();
+            List<User> users = generator.objects(User.class, 4).toList();
+            when(userService.getUsersByDateRange(startDate, endDate)).thenReturn(users);
+
+            mockMvc.perform(get(USERS_ENDPOINT)
+                            .header("correlationId", UUID.randomUUID().toString())
+                            .param("startDate", startDate.toString())
+                            .param("endDate", endDate.toString())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(users.size()));
+
+            verify(userService).getUsersByDateRange(startDate, endDate);
+        }
+
+        @Test
+        @DisplayName("Should return 400 Bad Request when only one date is provided")
+        void shouldReturnBadRequestWhenOneDateProvided() throws Exception {
+            LocalDate startDate = LocalDate.now().minusDays(5);
+
+            mockMvc.perform(get(USERS_ENDPOINT)
+                            .header("correlationId", UUID.randomUUID().toString())
+                            .param("startDate", startDate.toString())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest());
+
+            verifyNoInteractions(userService);
+        }
+    }
+
 }

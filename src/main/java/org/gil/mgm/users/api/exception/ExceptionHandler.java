@@ -74,7 +74,8 @@ public class ExceptionHandler {
     @org.springframework.web.bind.annotation.ExceptionHandler(value = {
         MethodArgumentTypeMismatchException.class, IllegalArgumentException.class,
         HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
-        MissingRequestHeaderException.class, MethodArgumentNotValidException.class
+        MissingRequestHeaderException.class, MethodArgumentNotValidException.class,
+        ValidationException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     protected ResponseEntity<ErrorResponse> handleMultipleBadRequestExceptions(Exception ex, WebRequest request) {

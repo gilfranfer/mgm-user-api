@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.gil.mgm.users.api.exception.ValidationException;
 import org.gil.mgm.users.api.model.User;
 import org.gil.mgm.users.api.service.UserService;
 import org.slf4j.Logger;
@@ -13,9 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+
+import static java.util.Objects.nonNull;
 
 @Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2025-02-11T22:44:28.452335707Z[GMT]")
 @RestController
@@ -37,6 +44,24 @@ public class UsersApiController implements UsersApi {
     ) {
         log.info("Executing getUserById");
         return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    public ResponseEntity<List<User>> getUsers(
+            @Parameter(in = ParameterIn.HEADER, description = "Unique identifier used to trace and track requests across multiple services or components." ,schema=@Schema()) @RequestHeader(value="correlationId", required=false) UUID correlationId,
+            @Parameter(in = ParameterIn.QUERY, description = "User's profession." ,schema=@Schema()) @Valid @RequestParam(value = "profession", required = false) String profession,
+            @Parameter(in = ParameterIn.QUERY, description = "Start Date (inclusive)." ,schema=@Schema()) @Valid @RequestParam(value = "startDate", required = false) LocalDate startDate,
+            @Parameter(in = ParameterIn.QUERY, description = "End Date (inclusive)." ,schema=@Schema()) @Valid @RequestParam(value = "endDate", required = false) LocalDate endDate
+    ) {
+        log.info("Executing getUsers");
+        if(nonNull(profession)){
+            return ResponseEntity.ok(userService.getUsersByProfession(profession));
+        }else if(nonNull(startDate) && nonNull(endDate)){
+            return ResponseEntity.ok(userService.getUsersByDateRange(startDate, endDate));
+        }else if (nonNull(startDate)||nonNull(endDate)) {
+            throw new ValidationException("Both Start Date and End Date must be provided");
+        }else{
+            return ResponseEntity.ok(userService.getAllUsers());
+        }
     }
 
 }
