@@ -2,8 +2,11 @@ package org.gil.mgm.users.api.config;
 
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
+import org.gil.mgm.users.api.controller.UsersApiController;
 import org.gil.mgm.users.api.entity.UserEntity;
 import org.gil.mgm.users.api.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -15,13 +18,11 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Component
 public class DataLoader {
 
-    private final Logger logger = Logger.getLogger(DataLoader.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(UsersApiController.class);
     private final UserRepository userRepository;
 
     public DataLoader(UserRepository userRepository) {
@@ -32,7 +33,7 @@ public class DataLoader {
     public void loadData()  throws IOException, CsvValidationException {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("data.csv");
         if(inputStream == null) {
-            logger.log(Level.SEVERE, "No data found");
+            log.error( "No data found");
             return;
         }
 
@@ -43,12 +44,12 @@ public class DataLoader {
             String[] data;
 
             csvReader.readNext(); // Skip header row
-            logger.log(Level.INFO, "Reading User data...");
+            log.info("Reading User data...");
             while ((data = csvReader.readNext()) != null) {
                 users.add( buildUserEntity(data));
             }
             userRepository.saveAll(users);
-            logger.log(Level.INFO, "User data Loaded into H2.");
+            log.info("User data Loaded into H2.");
         }
     }
 
